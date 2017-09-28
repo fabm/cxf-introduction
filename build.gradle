@@ -1,0 +1,46 @@
+group 'pt.fabm'
+version '1.0-SNAPSHOT'
+
+task wrapper(type: Wrapper) {
+    gradleVersion = '4.2'
+    distributionUrl = "https://services.gradle.org/distributions/gradle-$gradleVersion-all.zip"
+}
+
+apply plugin: 'java'
+
+sourceCompatibility = 1.8
+
+repositories {
+    mavenCentral()
+}
+
+project.ext {
+    cxfVersion = '2.5.1'
+    generatedWsdlDir = file("build/generated-sources")
+    wsdlDir = file("wsdl")
+}
+
+dependencies {
+    compile "org.apache.cxf:cxf-rt-frontend-jaxws:$cxfVersion"
+    compile "org.apache.cxf:cxf-rt-transports-http-jetty:$cxfVersion"
+    runtime "org.apache.cxf:cxf-tools:$cxfVersion",
+            "org.apache.cxf:cxf-tools-wsdlto-databinding-jaxb:$cxfVersion",
+            "org.apache.cxf:cxf-tools-wsdlto-frontend-jaxws:$cxfVersion"
+
+    testCompile "junit:junit:4.12"
+}
+
+task runServer(type: JavaExec) {
+    classpath sourceSets.main.runtimeClasspath
+    main = 'com.baeldung.cxf.introduction.Server'
+}
+
+task createJavaFromWsdl() {
+    doLast {
+        javaexec {
+            main = 'org.apache.cxf.tools.wsdlto.WSDLToJava'
+            classpath = configurations.runtime
+            args '-d', generatedWsdlDir, '-p', 'pt.fabm'
+        }
+    }
+}
